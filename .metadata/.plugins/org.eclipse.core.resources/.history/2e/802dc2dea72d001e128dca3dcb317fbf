@@ -1,0 +1,93 @@
+//server portion of the application
+package application;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+//server class
+//this takes a number passed in from the client and determines if it is prime or not.
+//If yes, a 'yes' is returned, otherwise a 'no' is returned
+public class PrimeNumServer extends Application {
+
+	//initializing sockets and streams for use
+    private ServerSocket serverSocket = null;
+    private Socket clientSocket = null;
+    private PrintWriter out = null;
+    private BufferedReader in = null;
+    private TextArea statusArea = new TextArea();
+
+    //isPrime function sees  if number is 2 or less, and returns a boolean
+    //if the input number is 3 or greater, run for loop. If for loop modulus operator returns
+    //zero, return 'no', otherwise return 'yes'
+    private static boolean isPrime(int n) {
+        if (n <= 1) return false;
+        if (n == 2) return true;
+        if (n % 2 == 0) return false;
+        for (int i = 3; i * i <= n; i += 2) {
+            if (n % i == 0) return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws IOException {
+
+        try {
+            serverSocket = new ServerSocket(4444);
+            clientSocket = serverSocket.accept();
+            out = new PrintWriter(clientSocket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            statusArea.appendText("Connection successful\n");
+            statusArea.appendText("Waiting for input.....\n");
+        } catch (IOException e) {
+            statusArea.appendText("Could not listen on port: 4444.\n");
+            System.exit(1);
+        }
+
+        new Thread(() -> {
+            String inputLine;
+            try {
+                while ((inputLine = in.readLine()) != null) {
+                    statusArea.appendText("Server: " + inputLine + "\n");
+                    int number = Integer.parseInt(inputLine);
+                    out.println(isPrime(number) ? "yes" : "no");
+                    if (inputLine.equals("Bye.")) break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        VBox layout = new VBox(10);
+        layout.getChildren().addAll(new Label("Server Status"), statusArea);
+
+        Scene scene = new Scene(layout, 300, 200);
+        primaryStage.setTitle("Prime Number Checker Server");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    @Override
+    public void stop() {
+        try {
+            out.close();
+            in.close();
+            clientSocket.close();
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}

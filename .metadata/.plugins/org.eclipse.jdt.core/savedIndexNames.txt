@@ -1,0 +1,12 @@
+INDEX VERSION 1.132+C:\Users\trist\Desktop\Module10\.metadata\.plugins\org.eclipse.jdt.core
+4185619269.index
+3829219685.index
+1865797976.index
+2454406452.index
+4260360796.index
+1275423099.index
+234409334.index
+2221574237.index
+1595173407.index
+2767635995.index
+2335470964.index

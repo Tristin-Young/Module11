@@ -1,0 +1,71 @@
+package application;
+
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class PrimeNumClient extends Application {
+
+    private Socket socket = null;
+    private PrintWriter out = null;
+    private BufferedReader in = null;
+
+    @Override
+    public void start(Stage primaryStage) throws IOException {
+    	Label instructions = new Label("Enter a number to see if it is prime. Type 'exit' to close the program");
+        TextField userInput = new TextField();
+        Button submitButton = new Button("Submit");
+        Label result = new Label();
+
+        try {
+            socket = new Socket("localhost", 4444);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (IOException e) {
+            result.setText("Couldn't get I/O for the connection to: localhost.");
+        }
+
+        submitButton.setOnAction(e -> {
+            String input = userInput.getText();
+            out.println(input);
+            try {
+                result.setText("Response from server: " + in.readLine());
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        });
+
+        VBox layout = new VBox(10);
+        layout.getChildren().addAll(instructions, userInput, submitButton, result);
+
+        Scene scene = new Scene(layout, 600, 400);
+        primaryStage.setTitle("Prime Number Checker Client");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    @Override
+    public void stop(){
+        try {
+            out.close();
+            in.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
